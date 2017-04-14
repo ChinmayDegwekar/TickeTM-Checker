@@ -8,10 +8,20 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.regions.Region;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.example.chinmay.ticketm_checker.barcode.BarcodeCaptureActivity;
+
+
+import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.dynamodbv2.*;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.*;
+import com.amazonaws.services.dynamodbv2.model.*;
 
 public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
@@ -67,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
                         txnID = parser[4];
                         timeStamp = parser[5];
 
+                        Database_checker();
 
                     }
 
@@ -76,5 +87,43 @@ public class MainActivity extends AppCompatActivity {
             } else Log.e(LOG_TAG, String.format(getString(R.string.barcode_error_format),
                     CommonStatusCodes.getStatusCodeString(resultCode)));
         } else super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    public void Database_checker()
+    {
+        Runnable runnable = new Runnable() {
+            public void run() {
+                //DynamoDB calls go here
+                CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
+                        getApplicationContext(),
+                        "us-west-2:6a90e3bc-32d9-4eb3-83c1-0d19aa5906fa", // Identity Pool ID
+                        Regions.US_WEST_2 // Region
+                );
+
+
+                AmazonDynamoDBClient ddbClient = Region.getRegion(Regions.US_WEST_2) // CRUCIAL
+
+                        .createClient(
+                                AmazonDynamoDBClient.class,
+                                credentialsProvider,
+                                new ClientConfiguration()
+                        );
+
+                DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
+
+                TicketDetailsDb tkt = new TicketDetailsDb();
+
+                TicketDetailsDb selectedTicket = mapper.load(TicketDetailsDb.class,"623662");
+                Log.e("rowid: ",selectedTicket.getPenalty()+" "+selectedTicket.getValidity());
+                Toast.makeText(MainActivity.this,selectedTicket.getTrans_id(),Toast.LENGTH_SHORT).show();
+
+            }
+        };
+
+
+        Thread mythread = new Thread(runnable);
+        mythread.start();
+
+
     }
 }
