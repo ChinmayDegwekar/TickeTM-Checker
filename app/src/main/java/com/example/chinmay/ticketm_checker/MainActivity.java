@@ -17,6 +17,17 @@ public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final int BARCODE_READER_REQUEST_CODE = 1;
 
+
+    private static final int BARCODE_DATA_LENGTH = 6;
+    //BARCODE DATA
+    private String service;
+    private String account_no;
+    private String amount;
+    private String validity;
+    private String txnID;
+    private String timeStamp;
+
+
     private TextView mResultTextView;
 
     @Override
@@ -46,6 +57,20 @@ public class MainActivity extends AppCompatActivity {
                     mResultTextView.setText(barcode.displayValue);
                     String decode = barcode.displayValue;
                     String[] parser = decode.split("&&");
+
+                    if(parser.length== BARCODE_DATA_LENGTH)
+                    {
+                        service = parser[0];
+                        account_no = parser[1];
+                        amount = parser[2];
+                        validity = parser[3];
+                        txnID = parser[4];
+                        timeStamp = parser[5];
+
+
+                    }
+
+
 
                 } else mResultTextView.setText(R.string.no_barcode_captured);
             } else Log.e(LOG_TAG, String.format(getString(R.string.barcode_error_format),
