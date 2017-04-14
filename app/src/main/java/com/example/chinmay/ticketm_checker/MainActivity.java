@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
 
                 TicketDetailsDb tkt = new TicketDetailsDb();
 
-                TicketDetailsDb selectedTicket = mapper.load(TicketDetailsDb.class,"623662");
+                TicketDetailsDb selectedTicket = mapper.load(TicketDetailsDb.class,txnID);
                 Log.e("rowid: ",selectedTicket.getPenalty()+" "+selectedTicket.getValidity());
                 Toast.makeText(MainActivity.this,selectedTicket.getTrans_id(),Toast.LENGTH_SHORT).show();
 
