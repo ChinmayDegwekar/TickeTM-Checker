@@ -26,4 +26,13 @@
         android:layout_below="@id/result_textview"
         android:background="@color/colorAccent"
         android:textColor="@color/colorWhite"/>
+
+    <TextView
+        android:id="@+id/tvIsValid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/scan_barcode_button"
+        android:layout_marginTop="25dp"
+        android:text=""
+         />
 </RelativeLayout>

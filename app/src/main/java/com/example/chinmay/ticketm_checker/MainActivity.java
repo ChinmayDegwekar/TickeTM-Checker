@@ -8,7 +8,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.regions.Region;
@@ -21,7 +20,10 @@ import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.*;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.*;
-import com.amazonaws.services.dynamodbv2.model.*;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
@@ -39,6 +41,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     private TextView mResultTextView;
+    private TextView isValidTextView;
+
+    public static boolean isvalid=false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +84,14 @@ public class MainActivity extends AppCompatActivity {
                         timeStamp = parser[5];
 
                         Database_checker();
+//                        isValidTextView = (TextView) findViewById(R.id.tvIsValid);
+//
+//                        isValidTextView.setVisibility(View.VISIBLE);
+//
+//                        if(isvalid)
+//                        isValidTextView.setText("This ticket is VALID");
+//                        else
+//                        isValidTextView.setText("This Ticket is NOT VALID");
 
                     }
 
@@ -91,6 +105,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void Database_checker()
     {
+
+        // boolean isvalid = false;
         Runnable runnable = new Runnable() {
             public void run() {
                 //DynamoDB calls go here
@@ -114,8 +130,44 @@ public class MainActivity extends AppCompatActivity {
                 TicketDetailsDb tkt = new TicketDetailsDb();
 
                 TicketDetailsDb selectedTicket = mapper.load(TicketDetailsDb.class,txnID);
-                Log.e("rowid: ",selectedTicket.getPenalty()+" "+selectedTicket.getValidity());
-                Toast.makeText(MainActivity.this,selectedTicket.getTrans_id(),Toast.LENGTH_SHORT).show();
+
+
+                Log.e("rowid: ",selectedTicket.getPenalty()+" "+selectedTicket.getValidity()+" "+selectedTicket.getTime_stamp());
+                //Toast.makeText(MainActivity.this,selectedTicket.getTrans_id(),Toast.LENGTH_SHORT).show();
+                Log.e("current: ",getCurrentSystemTime()+"   diff: "+ elapsedTimeInMinutes(getCurrentSystemTime(),selectedTicket.getTime_stamp()));
+
+                isValidTextView = (TextView) findViewById(R.id.tvIsValid);
+
+                if(isValid(selectedTicket))
+                {
+
+                    isvalid=true;
+                    //isValidTextView.setText("This ticket is Valid");
+                    //isValidTextView.setVisibility(View.VISIBLE);
+                    //isValidTextView.setTextColor();
+
+                    isValidTextView.post(new Runnable() {
+                        public void run() {
+
+                            isValidTextView.setText("This ticket is Valid");
+                        }
+                    });
+                }
+                else
+                {
+                    isvalid = false;
+//                    isValidTextView.setText("This ticket is NOT Valid");
+//                    isValidTextView.setVisibility(View.VISIBLE);
+
+                    isValidTextView.post(new Runnable() {
+                        public void run() {
+
+                            isValidTextView.setText("This ticket is NOT Valid");
+                        }
+                    });
+
+                }
+
 
             }
         };
@@ -123,6 +175,46 @@ public class MainActivity extends AppCompatActivity {
 
         Thread mythread = new Thread(runnable);
         mythread.start();
+
+
+    }
+
+    public static String getCurrentSystemTime() {
+        SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+        Date now = new Date();
+        String strDate = sdfDate.format(now);
+        return strDate;
+    }
+
+    public static long elapsedTimeInMinutes(String current, String paymentTimeStamp)
+    {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+        long diff=-1;
+        try {
+        Date date1 = format.parse(paymentTimeStamp);
+        Date date2 = format.parse(current);
+            diff = date2.getTime() - date1.getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();        //EXCEPTION HANDLING FOR MALECIOUS QRCODES
+        }
+        return diff/(1000*60);
+    }
+
+    public static boolean isValid(TicketDetailsDb selectedTicket)
+    {
+        String paymentTimeStamp = selectedTicket.getTime_stamp();
+        String current = getCurrentSystemTime();
+        long minutes = elapsedTimeInMinutes(getCurrentSystemTime(),selectedTicket.getTime_stamp());
+
+        int hours  = selectedTicket.getValidity();
+        Log.e("isValid: ",(1.0*hours - 1.0*minutes/60)+"");
+        if( (1.0*hours - 1.0*minutes/60) > 0)
+        {
+
+            return true;
+        }
+        else
+            return  false;
 
 
     }
