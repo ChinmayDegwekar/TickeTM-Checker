@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
 
                             isValidTextView.setText("This ticket is Valid");
-                            tvValidFor.setText("Valid for         :"+validFor(selectedTicket)*60+" mins");
+                            tvValidFor.setText("Valid for         :"+validFor(selectedTicket)+" mins");
                             //Setting Image
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                 isValidImageView.setImageDrawable(getResources().getDrawable(R.drawable.correct, getApplicationContext().getTheme()));
@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
 
                             isValidTextView.setText("This ticket is NOT Valid");
-                            tvValidFor.setText("InValid since     :"+validFor(selectedTicket)*60*-1+" mins");
+                            tvValidFor.setText("InValid since     :"+validFor(selectedTicket)*-1+" mins");
                             //Setting Image
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                 isValidImageView.setImageDrawable(getResources().getDrawable(R.drawable.incorrect, getApplicationContext().getTheme()));
@@ -236,9 +236,9 @@ public class MainActivity extends AppCompatActivity {
         String current = getCurrentSystemTime();
         long minutes = elapsedTimeInMinutes(getCurrentSystemTime(),selectedTicket.getTime_stamp());
 
-        int hours  = selectedTicket.getValidity();
-        Log.e("isValid: ",(1.0*hours - 1.0*minutes/60)+"");
-        if( (1.0*hours - 1.0*minutes/60) > 0)
+        int validityInMins  = selectedTicket.getValidity();
+        Log.e("isValid: ",(1.0*validityInMins - 1.0*minutes)+"");
+        if( (1.0*validityInMins - 1.0*minutes) > 0)
         {
 
             return true;
@@ -255,9 +255,9 @@ public class MainActivity extends AppCompatActivity {
         String current = getCurrentSystemTime();
         long minutes = elapsedTimeInMinutes(getCurrentSystemTime(),selectedTicket.getTime_stamp());
 
-        int hours  = selectedTicket.getValidity();
-        Log.e("isValid: ",(1.0*hours - 1.0*minutes/60)+"");
-        return 1.0*hours - 1.0*minutes/60;
+        int validityInMins  = selectedTicket.getValidity();
+        Log.e("isValid: ",(1.0*validityInMins - 1.0*minutes)+"");
+        return 1.0*validityInMins - 1.0*minutes;
 
     }
 }
