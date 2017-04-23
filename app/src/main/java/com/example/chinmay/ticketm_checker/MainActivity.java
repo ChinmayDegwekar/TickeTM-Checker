@@ -2,16 +2,19 @@ package com.example.chinmay.ticketm_checker;
 
 import android.content.Intent;
 import android.graphics.Point;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.regions.Region;
 import com.google.android.gms.common.api.CommonStatusCodes;
+import com.google.android.gms.plus.model.people.Person;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.example.chinmay.ticketm_checker.barcode.BarcodeCaptureActivity;
 
@@ -42,6 +45,12 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView mResultTextView;
     private TextView isValidTextView;
+    private ImageView isValidImageView;
+    private TextView tvTicketType;
+    private TextView tvTransactionTime;
+    private TextView tvValidFor;
+
+
 
     public static boolean isvalid=false;
 
@@ -52,6 +61,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mResultTextView = (TextView) findViewById(R.id.result_textview);
+        tvTicketType = (TextView) findViewById(R.id.tvTicketType);
+        tvTransactionTime = (TextView) findViewById(R.id.tvTransactionTime);
+        tvValidFor = (TextView) findViewById(R.id.tvValidFor);
+
 
         Button scanBarcodeButton = (Button) findViewById(R.id.scan_barcode_button);
         scanBarcodeButton.setOnClickListener(new View.OnClickListener() {
@@ -70,18 +83,19 @@ public class MainActivity extends AppCompatActivity {
                 if (data != null) {
                     Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
                     Point[] p = barcode.cornerPoints;
-                    mResultTextView.setText(barcode.displayValue);
+                    //mResultTextView.setText(barcode.displayValue);
+                    mResultTextView.setText("");
                     String decode = barcode.displayValue;
                     String[] parser = decode.split("&&");
 
                     if(parser.length== BARCODE_DATA_LENGTH)
                     {
-                        service = parser[0];
+                        service = parser[0];            tvTicketType.setText("Service Provider  :"+service);
                         account_no = parser[1];
                         amount = parser[2];
                         validity = parser[3];
                         txnID = parser[4];
-                        timeStamp = parser[5];
+                        timeStamp = parser[5];     tvTransactionTime.setText("Trans time        :"+timeStamp);
 
                         Database_checker();
 //                        isValidTextView = (TextView) findViewById(R.id.tvIsValid);
@@ -129,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
 
                 TicketDetailsDb tkt = new TicketDetailsDb();
 
-                TicketDetailsDb selectedTicket = mapper.load(TicketDetailsDb.class,txnID);
+                final TicketDetailsDb selectedTicket = mapper.load(TicketDetailsDb.class,txnID);
 
 
                 Log.e("rowid: ",selectedTicket.getPenalty()+" "+selectedTicket.getValidity()+" "+selectedTicket.getTime_stamp());
@@ -137,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("current: ",getCurrentSystemTime()+"   diff: "+ elapsedTimeInMinutes(getCurrentSystemTime(),selectedTicket.getTime_stamp()));
 
                 isValidTextView = (TextView) findViewById(R.id.tvIsValid);
+                isValidImageView = (ImageView)findViewById(R.id.ivStatus);
 
                 if(isValid(selectedTicket))
                 {
@@ -150,6 +165,14 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
 
                             isValidTextView.setText("This ticket is Valid");
+                            tvValidFor.setText("Valid for         :"+validFor(selectedTicket)*60+" mins");
+                            //Setting Image
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                isValidImageView.setImageDrawable(getResources().getDrawable(R.drawable.correct, getApplicationContext().getTheme()));
+                            } else {
+                                isValidImageView.setImageDrawable(getResources().getDrawable(R.drawable.correct));
+                            }
+
                         }
                     });
                 }
@@ -163,6 +186,13 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
 
                             isValidTextView.setText("This ticket is NOT Valid");
+                            tvValidFor.setText("InValid since     :"+validFor(selectedTicket)*60*-1+" mins");
+                            //Setting Image
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                isValidImageView.setImageDrawable(getResources().getDrawable(R.drawable.incorrect, getApplicationContext().getTheme()));
+                            } else {
+                                isValidImageView.setImageDrawable(getResources().getDrawable(R.drawable.incorrect));
+                            }
                         }
                     });
 
@@ -216,6 +246,18 @@ public class MainActivity extends AppCompatActivity {
         else
             return  false;
 
+
+    }
+
+    public static double validFor(TicketDetailsDb selectedTicket)
+    {
+        String paymentTimeStamp = selectedTicket.getTime_stamp();
+        String current = getCurrentSystemTime();
+        long minutes = elapsedTimeInMinutes(getCurrentSystemTime(),selectedTicket.getTime_stamp());
+
+        int hours  = selectedTicket.getValidity();
+        Log.e("isValid: ",(1.0*hours - 1.0*minutes/60)+"");
+        return 1.0*hours - 1.0*minutes/60;
 
     }
 }
