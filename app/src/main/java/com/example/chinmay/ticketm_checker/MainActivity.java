@@ -198,6 +198,8 @@ public class MainActivity extends AppCompatActivity {
 
                 }
 
+                updateStatus(tkt,mapper);
+
 
             }
         };
@@ -259,5 +261,11 @@ public class MainActivity extends AppCompatActivity {
         Log.e("isValid: ",(1.0*validityInMins - 1.0*minutes)+"");
         return 1.0*validityInMins - 1.0*minutes;
 
+    }
+
+    public static void updateStatus(TicketDetailsDb tkt,DynamoDBMapper mapper)
+    {
+        tkt.setStatus("Checked");
+        mapper.save(tkt);
     }
 }
